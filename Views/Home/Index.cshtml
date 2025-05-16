@@ -1,0 +1,63 @@
+﻿@{
+    ViewData["Title"] = "Inicio";
+    Layout = "_Layout";
+}
+
+<div id="app">
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <button class="nav-link" :class="{ active: tagActivo === 1 }" @@click="tagActivo = 1">Empresas</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" :class="{ active: tagActivo === 2 }" @@click="tagActivo = 2">Colaboradores</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" :class="{ active: tagActivo === 3 }"
+                @@click="tagActivo = 3">Mantenimientos</button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active">
+            <empresas-component v-if="tagActivo == 1" :key="'empresas-'+key"></empresas-component>
+            <colaboradores-component v-else-if="tagActivo == 2" :key="'colaboradores-'+key"></colaboradores-component>
+            <mantenimientos-component v-else :key="'mantenimientos-'+key"></mantenimientos-component>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const Empresas = httpVueLoader("/js/views/Empresas.vue");
+        const Colaboradores = httpVueLoader("/js/views/Colaboradores.vue");
+        const Mantenimientos = httpVueLoader("/js/views/Mantenimientos.vue");
+        let app = new Vue({
+            el: "#app",
+            data: {
+                tagActivo: 1,
+                key: 0,
+            },
+            created() {
+                axios.get("/api/auth/token").then(function (response) {
+                    const token = response.data.token;
+
+                    localStorage.setItem("token", token);
+                    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+                }.bind(this))
+                    .catch(function (error) {
+                        console.error("Error al obtener paises:", error);
+                    });
+            },
+            components: {
+                "empresas-component": Empresas,
+                "colaboradores-component": Colaboradores,
+                "mantenimientos-component": Mantenimientos,
+            },
+            watch: {
+                tagActivo(n) {
+                    this.key++;
+                },
+            },
+        });
+    </script>
+}
